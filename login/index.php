@@ -1,0 +1,80 @@
+<?php
+// Start the session
+session_start();
+
+// Check if the user is already logged in
+if (isset($_SESSION['username'])) {
+    header('Location: dashboard.php');
+    exit;
+}
+
+// Include the database connection file
+require_once 'db.php';
+
+// Define the error messages
+$errors = array();
+
+// Check if the form has been submitted
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Get the username and password from the form
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    // Check if the username and password are empty
+    if (empty($username) || empty($password)) {
+        $errors[] = 'Please enter both username and password';
+    } else {
+        // Query the database to check if the username and password are correct
+        $query = "SELECT * FROM users WHERE username = '$username' AND password = '$password'";
+        $result = mysqli_query($conn, $query);
+
+        // Check if the query returned any results
+        if (mysqli_num_rows($result) == 1) {
+            // Set the session variables
+            $_SESSION['username'] = $username;
+            $_SESSION['logged_in'] = true;
+
+            // Redirect to the dashboard page
+            header('Location: dashboard.php');
+            exit;
+        } else {
+            $errors[] = 'Invalid username or password';
+        }
+    }
+}
+
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome | Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    <div class="wrapper">
+        <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post">
+            <h1>Login</h1>
+            <?php if (!empty($errors)) { ?>
+                <div class="error-message">
+                    <?php foreach ($errors as $error) { ?>
+                        <p><?php echo $error; ?></p>
+                    <?php } ?>
+                </div>
+            <?php } ?>
+            <div class="input-box">
+                <input type="text" name="username" placeholder="User ID" required>
+                <i class='bx bxs-user'></i>
+            </div>
+            <div class="input-box">
+                <input type="password" name="password" placeholder="Password" required>
+                <i class='bx bxs-lock-alt' ></i>
+            </div>
+            <button type="submit" class="btn" >Login</button>
+        </form>
+    </div>
+</body>
+</html>
